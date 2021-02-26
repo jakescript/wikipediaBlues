@@ -1,14 +1,21 @@
 {
   "manifest_version": 2,
-  "name": "History Music",
-  "description": "Turn your search history into a tune",
-  "version": "0.1.0",
+  "name": "Wikipedia blues",
+  "description": "Turn any wikipedia article into a song based off the emotional tone.",
+  "version": "1.0.0",
+  "icons": {
+    "128": "icon_128.png",
+    "32": "icon32.png",
+    "16": "icon_16.png"
+  },
   "permissions": [
+    "https://en.wikipedia.org/*",
     "storage",
     "tabs",
     "activeTab"
   ],
   "browser_action": {
+    "default_icon": "icon_128.png",
     "default_title": "Musical Search"
   },
   "content_scripts": [

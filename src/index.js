@@ -1,4 +1,5 @@
-const axios = require("axios")
+const textToTone = require("./textTone.js")
+const buildNotes = require("./buildNotes.js")
 const audioCtx = new AudioContext()
 const tempo = 200
 const lookahead = 25.0; // How frequently to call scheduling function (in milliseconds)
@@ -9,58 +10,6 @@ let notes = []
 let noteID = 0;
 let nextNotetime = 0.0
 let timerID;
-
-const textToTone = async text => {
-  const url = 'https://api.us-east.tone-analyzer.watson.cloud.ibm.com/instances/aafa0a79-931d-4dfb-a251-f1080fbd6db9/v3/tone?version=2017-09-21'
-  try {
-    const {data} = await axios.post(url,{ text },
-      {
-        auth: {
-          username: "apikey",
-          password: "isT284_w63-M6qwoIL08FnjHg6TpyVFYwSBdyMlgik7q"
-        },
-        headers: {
-          "Content-Type": "application/json"
-        }
-      }
-    )
-
-    if(data){
-      console.log(data)
-      return data
-    }
-  } catch (error) {
-    console.log(error)
-  }
-}
-
-const noteList = arr => {
-  const tones = []
-  arr.map(page => {
-    page.sentences_tone.map(sentence => {
-      if(sentence.tones){
-        sentence.tones.map(tone => {
-          if(tone.score <= 0.6){
-            tones.push({note: "D", freq: 293.66})
-          }else if(tone.score <= 0.7){
-            tones.push({note: "F", freq: 349.23})
-          }else if(tone.score <= 0.8){
-            tones.push({note: "G", freq: 392.0})
-          }else if(tone.score <= 0.9){
-            tones.push({note: "A", freq: 440.0})
-          }else if(tone.score <= 1.0){
-            tones.push({note: "C", freq: 523.26})
-          }else if(tone.score === 1){
-            tones.push({note: "D", freq:  587.32})
-          }
-        })
-      }
-    })
-  })
-
-  return tones
-}
-
 
 
 const nextNote = () => {
@@ -107,7 +56,7 @@ const play = (note, time) => {
 }
 
 const clicked = tab => {
-  notes = noteList(session)
+  notes = buildNotes.default(session)
   nextNoteTime = audioCtx.currentTime
   noteID = 0
   scheduler()
@@ -118,7 +67,7 @@ chrome.browserAction.onClicked.addListener(clicked);
 // listening for messages from tabs
 chrome.runtime.onMessage.addListener(async(req, sender, sendResponse) => {
   session = []
-  session.push(await textToTone(req.content))
+  session.push(await textToTone.default(req.content))
 });
 
 
