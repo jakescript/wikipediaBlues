@@ -1,9 +1,9 @@
 const textToTone = require("./textTone.js")
 const buildNotes = require("./buildNotes.js")
 const audioCtx = new AudioContext()
-const tempo = 200
 const lookahead = 25.0; // How frequently to call scheduling function (in milliseconds)
 const scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
+let tempo = 200
 
 let session = []
 let notes = []
@@ -60,11 +60,14 @@ const play = (note, time) => {
 // interactions
 
 chrome.browserAction.onClicked.addListener(tab => {
-  chrome.browserAction.setBadgeBackgroundColor({"color": "#0000ff"})
-  notes = buildNotes.default(session)
-  nextNoteTime = audioCtx.currentTime
-  noteID = 0
-  scheduler()
+  const url = new URL(tab.url)
+  if(url.host === "en.wikipedia.org"){
+    chrome.browserAction.setBadgeBackgroundColor({"color": "#0000ff"})
+    notes = buildNotes.default(session)
+    nextNoteTime = audioCtx.currentTime
+    noteID = 0
+    scheduler()
+  }
 });
 
 // listening for messages from tabs
@@ -72,8 +75,11 @@ chrome.runtime.onMessage.addListener( async(req, sender, sendResponse) => {
   if(req.content){
     session = []
     session.push(await textToTone.default(req.content))
+  }else if(req.message === "TEMPO_SET"){
+    chrome.storage.sync.get("tempo", res => {
+      tempo = res.tempo
+    })
   }
-
 });
 
 
