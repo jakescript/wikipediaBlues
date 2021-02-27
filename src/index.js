@@ -10,6 +10,7 @@ let notes = []
 let noteID = 0;
 let nextNotetime = 0.0
 let timerID;
+let release = 2
 
 chrome.browserAction.setBadgeText({text: " "})
 chrome.browserAction.setBadgeBackgroundColor({"color": "#ff0000"})
@@ -21,7 +22,6 @@ const nextNote = () => {
   // fix note stopping here
   if(noteID >= notes.length){
     chrome.browserAction.setBadgeBackgroundColor({"color": "#00ff00"})
-    notes = []
     window.clearTimeout(timerID)
   }
 }
@@ -44,7 +44,7 @@ const play = (note, time) => {
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
   gainNode.gain.setValueAtTime(0.5, time);
-  gainNode.gain.exponentialRampToValueAtTime(0.001, time + 2)
+  gainNode.gain.exponentialRampToValueAtTime(0.001, time + release)
   gainNode.connect(audioCtx.destination)
 
   oscillator.type = note.type
@@ -52,10 +52,11 @@ const play = (note, time) => {
   oscillator.connect(gainNode)
   oscillator.start(time)
 
+  const ms = release * 1000
   setTimeout(() => {
     oscillator.stop()
     oscillator.disconnect()
-  }, 2000)
+  }, ms)
 }
 
 // interactions
@@ -63,6 +64,7 @@ const play = (note, time) => {
 chrome.browserAction.onClicked.addListener(tab => {
   const url = new URL(tab.url)
   if(url.host === "en.wikipedia.org"){
+    console.log(release)
     chrome.browserAction.setBadgeBackgroundColor({"color": "#0000ff"})
     notes = buildNotes.default(session)
     nextNoteTime = audioCtx.currentTime
@@ -76,9 +78,11 @@ chrome.runtime.onMessage.addListener( async(req, sender, sendResponse) => {
   if(req.content){
     session = []
     session.push(await textToTone.default(req.content))
-  }else if(req.message === "TEMPO_SET"){
-    chrome.storage.sync.get("tempo", res => {
-      tempo = res.tempo
+  }else if(req.message === "SETTINGS_CHANGE"){
+    chrome.storage.sync.get(null, res => {
+      console.log(res)
+      tempo = res.tempo*1
+      release = res.release*1
     })
   }
 });
