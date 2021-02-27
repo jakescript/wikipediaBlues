@@ -21,6 +21,7 @@ const nextNote = () => {
   // fix note stopping here
   if(noteID >= notes.length){
     chrome.browserAction.setBadgeBackgroundColor({"color": "#00ff00"})
+    notes = []
     window.clearTimeout(timerID)
   }
 }
@@ -82,6 +83,12 @@ chrome.runtime.onMessage.addListener( async(req, sender, sendResponse) => {
   }
 });
 
-
-
-
+// reset badge color on new tabs that are not wikipedia
+chrome.tabs.onActivated.addListener(tab => {
+  chrome.tabs.get(tab.tabId, currentTab => {
+    const url = new URL(currentTab.url)
+    if(url.host !== "en.wikipedia.org"){
+      chrome.browserAction.setBadgeBackgroundColor({"color": "#ff0000"})
+    }
+  })
+})
