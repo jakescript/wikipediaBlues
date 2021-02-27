@@ -1,10 +1,10 @@
 const textToTone = require("./textTone.js")
 const buildNotes = require("./buildNotes.js")
-const audioCtx = new AudioContext()
 const lookahead = 25.0; // How frequently to call scheduling function (in milliseconds)
 const scheduleAheadTime = 0.1; // How far ahead to schedule audio (sec)
-let tempo = 200
+const audioCtx = new AudioContext();
 
+let tempo = 200
 let session = []
 let notes = []
 let noteID = 0;
@@ -41,6 +41,7 @@ function scheduler() {
 }
 
 const play = (note, time) => {
+  console.log(note, time)
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
   gainNode.gain.setValueAtTime(0.5, time);
@@ -52,21 +53,19 @@ const play = (note, time) => {
   oscillator.connect(gainNode)
   oscillator.start(time)
 
-  const ms = release * 1000
   setTimeout(() => {
     oscillator.stop()
     oscillator.disconnect()
-  }, ms)
+  }, release * 1000)
 }
 
 // interactions
-
 chrome.browserAction.onClicked.addListener(tab => {
   const url = new URL(tab.url)
   if(url.host === "en.wikipedia.org"){
-    console.log(release)
     chrome.browserAction.setBadgeBackgroundColor({"color": "#0000ff"})
     notes = buildNotes.default(session)
+    console.log(notes)
     nextNoteTime = audioCtx.currentTime
     noteID = 0
     scheduler()
@@ -80,7 +79,6 @@ chrome.runtime.onMessage.addListener( async(req, sender, sendResponse) => {
     session.push(await textToTone.default(req.content))
   }else if(req.message === "SETTINGS_CHANGE"){
     chrome.storage.sync.get(null, res => {
-      console.log(res)
       tempo = res.tempo*1
       release = res.release*1
     })
@@ -90,9 +88,15 @@ chrome.runtime.onMessage.addListener( async(req, sender, sendResponse) => {
 // reset badge color on new tabs that are not wikipedia
 chrome.tabs.onActivated.addListener(tab => {
   chrome.tabs.get(tab.tabId, currentTab => {
-    const url = new URL(currentTab.url)
-    if(url.host !== "en.wikipedia.org"){
-      chrome.browserAction.setBadgeBackgroundColor({"color": "#ff0000"})
+    if(currentTab.title !== "New Tab"){
+      const url = new URL(currentTab.url)
+      if(url.host !== "en.wikipedia.org"){
+        chrome.browserAction.setBadgeBackgroundColor({"color": "#ff0000"})
+      }else{
+        if(notes){
+          chrome.browserAction.setBadgeBackgroundColor({"color": "#00ff00"})
+        }
+      }
     }
   })
 })
