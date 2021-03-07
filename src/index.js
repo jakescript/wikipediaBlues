@@ -41,7 +41,7 @@ function scheduler() {
 }
 
 const play = (note, time) => {
-  console.log(note, time)
+  console.log(note)
   const oscillator = audioCtx.createOscillator();
   const gainNode = audioCtx.createGain();
   gainNode.gain.setValueAtTime(0.5, time);
@@ -97,6 +97,8 @@ chrome.tabs.onActivated.addListener(tab => {
           chrome.browserAction.setBadgeBackgroundColor({"color": "#00ff00"})
         }
       }
+    }else{
+      chrome.browserAction.setBadgeBackgroundColor({"color": "#ff0000"})
     }
   })
 })
