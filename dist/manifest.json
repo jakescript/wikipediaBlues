@@ -9,7 +9,6 @@
     "16": "icon_16.png"
   },
   "permissions": [
-    "https://en.wikipedia.org/*",
     "storage",
     "tabs",
     "activeTab"
